@@ -1,0 +1,23 @@
+#!/bin/bash
+
+####################
+# batch for log files
+# author : HSW
+# Date : 2020.01.05
+####################
+
+echo backOffice Log File Batch Start !!
+
+# Variable
+DIR=/root/.pm2/logs
+PERIOD=1
+CURRENT_YEAR=$(date +%Y)
+
+#로그파일 생성일이 30일 이상 된 파일 목록 조회
+find ${DIR}/${CURRENT_YEAR}*.log -mtime +${PERIOD} -print | xargs ls -l
+
+# 로그 파일 최종일이 30일 이상 된 파일 전부 삭제
+find ${DIR}/${CURRENT_YER}*.log -mtime +${PERIOD} |xargs -0 -r  rm -rf
+
+
+echo backOffice Log File Batch Complete !!
