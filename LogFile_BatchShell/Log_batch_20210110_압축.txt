@@ -1,0 +1,21 @@
+#!/bin/bash
+
+####################
+# batch for log files
+# author : HSW
+# Date : 2020.01.05
+####################
+
+echo backOffice Log File Batch Start !!
+
+# Variable
+DIR=/root/.pm2/logs
+PERIOD=1
+CURRENT_YEAR=$(date +%Y-%m -d -1month)
+
+# 로그파일 압축 매월 초 실행
+# gzip /root/.pm2/logs/${CURRENT_YEAR}*.logs
+
+
+echo $CURRENT_YEAR
+
