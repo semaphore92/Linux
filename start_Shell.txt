@@ -1,0 +1,72 @@
+#!/bin/sh
+
+# 스크립트 실행 파일 경로 조회
+SCRIPTPATH='cd $(dirname $0) ; pwd -P'
+
+# 스크립트 본인의 이름 조회
+SCRIPT=$SCRIPTPATH/$(basename $0)
+
+# 환경변수 쉘 실행
+. ${SCRIPTPATH}/env.sh
+
+# USER 변수 Setting
+SETUSER=${WAS_USER}
+RUNNER='whoami'
+
+# 실행자와 WAS_USER의 계정이 다르면 Deny
+if [ ${RUNNER} != ${SETUSER} ] ;
+   then echo "Deny Access : [ ${RUNNER} ]. Not ${SETUSER} ;
+   exit 0 ;
+fi
+
+# 자바 프로세스 중 도메인 별명과 일치 조회가 되면 already 메시지와 종료상태 반환
+ps -ef | grep java | grep =q "was_cname=${INST_NAME}" && echo "##### ERROR. ${INST_NAME} is already running exiting.. #### && exit 1
+
+
+LOG_DATE='date +%Y%m%d'
+
+# 로그 경로에 gc 로그 파일이 존재하면 gc 로그파일 경로로 이동
+if [ -f ${LOG_HOME}/gc_${INST_NAME}.log ]; 
+   then mv ${LOG_HOME}/gc_${INST_NAME}.log ${LOG_HOME}/gclog/gc_${INST_NAME}.log.${DATE}
+fi
+
+
+if [ 0 -eq 'ls ${LOG_HOME} | grep "\.out*" | grep -v "${LOG_DATE}" | wc -l' ];
+   then echo "Previous log does not exist"
+else
+   cd ${LOG_HOME}
+   for LOG_FILE in 'ls *.out | grep -v "${LOG_DATE}"'
+   do
+      mv ${LOG_FILE} nohup/${LOG_FILE}.${DATE}
+   done
+fi 
+
+
+# Template file Clean
+rm -rf ${CATALINA_BASE}/temp/*
+rm -rf ${CATALINA_BASE}/webapps/*
+rm -rf ${CATALINA_BASE}/work/*
+
+
+
+# Jenkins
+if [ "$1" = "-boot_on_jenkins" ]
+   then 
+      nohup ${CATALINA_HOME}/bin/startup.sh > /dev/null 2>&1 &
+      while [ ! -f $CATALINA_PID ]
+      do
+         sleep 0.1
+      done
+      echo "[INFO] Tomcat Booted on Jenkins!"
+   else
+      ${CATALINA_HOME}/bin/startup.sh
+fi
+
+# PID 파일 존재확인
+if [ -z 'cat $CATALINA_PID' ]; then
+   #echo "PID_MAKING..."
+   echo 'ps -ef | grep java | grep ${CATALINA_BASE} | grep was_cname=${INST_NAME} | awk {'print $2'} > "$CATALINA_PID"
+fi
+   
+
+
